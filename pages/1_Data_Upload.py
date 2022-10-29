@@ -1,37 +1,44 @@
-# TODO: add processing of vast-meta and merge
-# TODO: get intronic sequences for exons
-
+# TODO: Add description
 
 import streamlit as st
 import pandas
 
+st.set_page_config(layout='wide', page_title='Data Upload')
+st.header('Upload and Process Data')
 
-st.set_page_config(layout="wide", page_title="Data Upload")
-st.header("Data Upload and Processing")
-st.markdown("""
-Describe.
+# Page 2 Info
+expander = st.expander(label='Read more')
+with expander:
+    st.markdown(
+        """
+        ## 
+        
 
-""")
+        """
+    )
 
 
 # Page 2 Callbacks
 def process_data(df: pandas.DataFrame, col_a: str, col_b: str):
     """
 
-    :param df:
-    :param col_a:
-    :param col_b:
-    :return:
+    :param df: output from vast-out diff module
+    :param col_a: new name for PSI_A column, usually a Control condition
+    :param col_b: new name for PSI_A column, usually an Experimental condition
+    :return: processed dataframe merged with metadata
     """
     # rename conditions
     data = df.copy().set_index('EventID'). \
         filter(regex='HsaEX', axis=0). \
         rename(columns={'PSI_A': col_a, 'PSI_B': col_b}). \
         reset_index()
+    # define microexons and long exons
+    data['EXON_TYPE'] = data['LENGTH'].apply(lambda x: 'MIC' if x <= 27 else 'LONG')
     # append to session state
     st.success('Uploaded dataframe!')
     st.balloons()
     st.session_state.vastdiff_output.append(data)
+
 
 # Page 2 Content
 page1_container = st.container()
@@ -46,19 +53,16 @@ with page1_container:
                                         placeholder='Control condition')
             rename_psiB = st.text_input(label='Specify Condition B',
                                         placeholder='Experimental  condition name')
-            # min_dpsi = st.number_input(label='Select minimum +/- dPSI threshold',
-            #                            min_value=10, max_value=90, )
         if dataframe_path:
             data_in = pandas. \
                 read_csv(dataframe_path, sep='\t')
-            st.write(data_in.head(10))
             # drop('TYPE', axis=1)
-            # meta_in = pandas.\
-            #     read_csv('', sep='\t')
-            # data_final = pandas.merge([data_in, meta_in], on='EventID', how='left')
+            meta_in = pandas. \
+                read_csv(f'./data/TEST_META.tab.gz', sep='\t')
+            data_final = data_in.merge(meta_in, on='EventID', how='left')
             with right_col:
                 load = st.button('Load dataframe', on_click=process_data,
-                                 args=(data_in, rename_psiA, rename_psiB))
+                                 args=(data_final, rename_psiA, rename_psiB))
     else:
         with page1_container:
             st.header('Uploaded dataframe:')
