@@ -1,9 +1,15 @@
 # TODO: improve table rendering with aggrid
+# TODO: Add description
 
 import streamlit as st
 import pandas
 import plotly
 import numpy
+import os
+import sys
+
+project_dir = os.getcwd()
+sys.path.append(f'/{project_dir}')
 
 
 st.set_page_config(layout="wide", page_title="Home", initial_sidebar_state="collapsed")
@@ -18,16 +24,15 @@ if 'num' not in st.session_state:
 left_col, right_col = st.columns(2)
 left_col.title("VAST-viewer")
 left_col.header("A tool for visualising vast-tools alternative splicing analysis and sequence querying.")
+
 st.markdown(
-    """
-    ## Summary
-    Describe.
+        """
+        ## Summary
+        Impact on open reading frame is available from [VastDB, v3](ttps://vastdb.crg.eu/wiki/Downloads) and generated 
+        as described in [Irimia et al, 2014]().
 
-    ---
-
-    """
+        """
 )
-
 
 _, center, _ = st.columns((2, 1, 2))
 with center:
