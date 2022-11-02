@@ -19,7 +19,8 @@ if 'vastdiff_output' not in st.session_state:
     st.session_state.vastdiff_output = []
 if 'num' not in st.session_state:
     st.session_state.num = 1
-
+if 'rename_psiA' and 'rename_psiB' not in st.session_state:
+    st.session_state.rename_psiA, st.session_state.rename_psiB = '', ''
 
 left_col, right_col = st.columns(2)
 left_col.title("VAST-viewer")
