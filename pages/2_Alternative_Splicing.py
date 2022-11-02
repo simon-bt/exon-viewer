@@ -23,8 +23,19 @@ page2_container = st.container()
 
 def update_figures():
     testObject.diff_threshold = dpsi_value
-    data_callback = testObject.call_diff()
-    st.write(data_callback.head())
+    udpated_data = testObject.call_diff()
+
+    updated_scatter_plot = testObject.plot_scatter(udpated_data)
+    updated_violin_plot = testObject.plot_violin(udpated_data)
+    updated_pie_chart = testObject.plot_pie(udpated_data)
+    updated_dist_plot = testObject.plot_dist(udpated_data)
+    updated_orf_plot = testObject.plot_orf(udpated_data)
+
+    st.session_state.figures.update({'UPDATED_SCATTER_PLOT': updated_scatter_plot})
+    st.session_state.figures.update({'VIOLIN_PLOT': updated_violin_plot})
+    st.session_state.figures.update({'PIE_CHART': updated_pie_chart})
+    st.session_state.figures.update({'DIST_PLOT': updated_dist_plot})
+    st.session_state.figures.update({'ORF_PLOT': updated_orf_plot})
 
 
 with st.sidebar:
@@ -34,9 +45,9 @@ with st.sidebar:
     color_b = st.color_picker(
         label='Select colour for Condition B', value='#800020')
     dpsi_value = st.number_input(label='Select dPSI threshold',
-                                 min_value=10,
-                                 max_value=90,
-                                 value=15, on_change=update_figures)
+                                 min_value=0,
+                                 max_value=100,
+                                 value=0, on_change=update_figures)
 
 if not st.session_state.vastdiff_output:
     st.warning('Upload Data!')
@@ -51,25 +62,37 @@ else:
         color_b=color_b)
     data_diff = testObject.call_diff()
 
+    scatter_plot = testObject.plot_scatter(data_diff)
+    violin_plot = testObject.plot_violin(data_diff)
+    pie_chart = testObject.plot_pie(data_diff)
+    dist_plot = testObject.plot_dist(data_diff)
+    orf_plot = testObject.plot_orf(data_diff)
+
+    st.session_state.figures.update({'SCATTER_PLOT': scatter_plot})
+    st.session_state.figures.update({'VIOLIN_PLOT': violin_plot})
+    st.session_state.figures.update({'PIE_CHART': pie_chart})
+    st.session_state.figures.update({'DIST_PLOT': dist_plot})
+    st.session_state.figures.update({'ORF_PLOT': orf_plot})
+
     with page2_container:
         with st.container():
             st.subheader('Alternative splicing profile')
             left, right = st.columns([1, 1])
             with left:
-                st.plotly_chart(testObject.plot_scatter(data_diff))
+                st.plotly_chart(st.session_state.figures['SCATTER_PLOT'])
             with right:
-                st.plotly_chart(testObject.plot_violin(data_diff))
+                st.plotly_chart(st.session_state.figures['VIOLIN_PLOT'])
 
         with st.container():
             st.subheader('Differentially spliced events')
             left, right = st.columns([1, 1])
             with left:
-                st.plotly_chart(testObject.plot_pie(data_diff))
+                st.plotly_chart(st.session_state.figures['PIE_CHART'])
             with right:
-                st.plotly_chart(testObject.plot_dist(data_diff))
+                st.plotly_chart(st.session_state.figures['DIST_PLOT'])
 
         with st.container():
             st.subheader('Impact on open reading frame')
             left, _ = st.columns([1, 1])
             with left:
-                st.plotly_chart(testObject.plot_orf(data_diff))
+                st.plotly_chart(st.session_state.figures['ORF_PLOT'])
