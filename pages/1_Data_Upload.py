@@ -53,6 +53,10 @@ with page1_container:
                                         placeholder='Control condition')
             rename_psiB = st.text_input(label='Specify Condition B',
                                         placeholder='Experimental  condition name')
+
+            st.session_state.rename_psiA = rename_psiA
+            st.session_state.rename_psiB = rename_psiB
+
         if dataframe_path:
             data_in = pandas. \
                 read_csv(dataframe_path, sep='\t')
