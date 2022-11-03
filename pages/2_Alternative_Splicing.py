@@ -4,6 +4,7 @@
 
 import streamlit as st
 from src.modules import vis_data
+import io
 
 st.set_page_config(layout='wide', page_title='Alternative Splicing')
 st.header('Visualise')
@@ -54,11 +55,6 @@ def update_figures():
 with st.sidebar:
     st.subheader('Options')
     left, right = st.columns([1, 1])
-    dpsi_value = st.number_input(
-        label='Select dPSI threshold',
-        value=0,
-        min_value=0,
-        max_value=100)
     with left:
         color_a = st.color_picker(
             label='Condition A',
@@ -72,6 +68,7 @@ with st.sidebar:
         max_length = st.number_input(
             label='Max exon length',
             value=150)
+
     with right:
         color_b = st.color_picker(
             label='Condition B',
@@ -82,6 +79,11 @@ with st.sidebar:
         color_reg = st.color_picker(
             label='Regulated events',
             value='#23AD3C')
+        dpsi_value = st.number_input(
+            label='dPSI threshold',
+            value=0,
+            min_value=0,
+            max_value=100)
     button = st.button(label='Update figures', on_click=update_figures)
 
 if not st.session_state.vastdiff_output:
@@ -142,3 +144,22 @@ else:
                 with right:
                     st.subheader('Impact on open reading frame')
                     st.plotly_chart(st.session_state.figures['ORF_PLOT'])
+
+            with st.container():
+                st.subheader('Download Figures')
+                left, right = st.columns([1, 1])
+                available_figures = [key for (key, value) in st.session_state.figures.items()]
+                with left:
+                    selected_figure = st.selectbox('Select figure:', available_figures, index=0)
+                with right:
+                    figure_name = st.text_input(label='Figure name', value=selected_figure)
+
+                figure_object = st.session_state.figures[selected_figure]
+                buffer = io.BytesIO()
+                figure_object.write_image(file=buffer, format="pdf")
+                st.download_button(
+                        label="Download Figure PDF",
+                        data=buffer,
+                        file_name=f"{figure_name}.pdf",
+                        mime="application/pdf",
+                    )
