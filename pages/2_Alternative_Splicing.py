@@ -27,7 +27,11 @@ def update_figures():
         condition_a=st.session_state.rename_psiA,
         condition_b=st.session_state.rename_psiB,
         color_a=color_a,
-        color_b=color_b)
+        color_b=color_b,
+        color_mic=color_mic,
+        color_long=color_long,
+        color_reg=color_reg,
+        color_nonreg=color_nonreg)
 
     testObject.diff_threshold = dpsi_value
     udpated_data = testObject.call_diff()
@@ -46,14 +50,33 @@ def update_figures():
 
 with st.sidebar:
     st.subheader('Options')
-    color_a = st.color_picker(
-        label='Select color for Condition A', value='#008080')
-    color_b = st.color_picker(
-        label='Select colour for Condition B', value='#800020')
-    dpsi_value = st.number_input(label='Select dPSI threshold',
-                                 value=0,
-                                 min_value=0,
-                                 max_value=100)
+    left, right = st.columns([1, 1])
+    dpsi_value = st.number_input(
+        label='Select dPSI threshold',
+        value=0,
+        min_value=0,
+        max_value=100)
+    with left:
+        color_a = st.color_picker(
+            label='Condition A',
+            value='#008080')
+        color_mic = st.color_picker(
+            label='MIC',
+            value='#F5AA42')
+        color_nonreg = st.color_picker(
+            label='Unregulated events',
+            value='#B6B9BF')
+    with right:
+
+        color_b = st.color_picker(
+            label='Condition B',
+            value='#800020')
+        color_long = st.color_picker(
+            label='LONG',
+            value='#35BCDE')
+        color_reg = st.color_picker(
+            label='Regulated events',
+            value='#23AD3C')
     button = st.button(label='Update figures', on_click=update_figures)
 
 if not st.session_state.vastdiff_output:
@@ -66,7 +89,11 @@ else:
             condition_a=st.session_state.rename_psiA,
             condition_b=st.session_state.rename_psiB,
             color_a=color_a,
-            color_b=color_b)
+            color_b=color_b,
+            color_mic=color_mic,
+            color_long=color_long,
+            color_reg=color_reg,
+            color_nonreg=color_nonreg)
         data_diff = testObject.call_diff()
 
         scatter_plot = testObject.plot_scatter(data_diff)
