@@ -33,7 +33,8 @@ class SplicingAnalysis:
                  color_mic: str,
                  color_long: str,
                  color_nonreg: str,
-                 color_reg: str):
+                 color_reg: str,
+                 max_length: int):
         self.data = data
         self.condition_a = condition_a
         self.condition_b = condition_b
@@ -44,6 +45,7 @@ class SplicingAnalysis:
         self.color_long = color_long
         self.color_nonreg = color_nonreg
         self.color_reg = color_reg
+        self.max_length = max_length
 
     @property
     def diff_threshold(self):
@@ -90,7 +92,6 @@ class SplicingAnalysis:
                               x0=0.5, y0=0, x1=100, y1=100,
                               line=dict(color="lightgrey", width=2))
         return fig_scatter
-
 
     def plot_pie(self, df: pandas.DataFrame):
         data_diff_truly = df.query('DIFF == \'Yes\'')
@@ -198,7 +199,6 @@ class SplicingAnalysis:
                              zeroline=False)
         return fig_orf
 
-
     def plot_violin(self, df: pandas.DataFrame):
         __data_melt = df. \
             query('DIFF == \'Yes\''). \
@@ -259,3 +259,48 @@ class SplicingAnalysis:
                                 linecolor='black', tickcolor='black', mirror=True, linewidth=2,
                                 zeroline=False, nticks=10, range=[-15, 115])
         return fig_violin
+
+    def plot_length(self, df: pandas.DataFrame):
+        fig_length = px.scatter(df, x='LENGTH',
+                                y='dPSI',
+                                color='EXON_TYPE',
+                                hover_data=df.columns,
+                                labels={'EXON_TYPE': 'Exon Type'},
+                                color_discrete_sequence=[self.color_long, self.color_mic])
+        fig_length.update_layout(
+            template=FIG_TEMPLATE,
+            yaxis=dict(title='Change in inclusion [dPSI]'),
+            xaxis=dict(title='Length [nt]'),
+            width=600,
+            height=500,
+            legend=dict(x=0.5, y=1.15, orientation="h", xanchor='auto', yanchor='auto'),
+            margin=dict(l=100, r=10, b=60, t=10, pad=5))
+        fig_length.add_hline(y=self.diff_threshold,
+                             line_width=2,
+                             line_dash="dash",
+                             line_color="grey")
+        fig_length.add_hline(y=-self.diff_threshold,
+                             line_width=2,
+                             line_dash="dash",
+                             line_color="grey")
+        fig_length.add_hrect(y0=self.diff_threshold,
+                             y1=-self.diff_threshold,
+                             line_width=0,
+                             fillcolor=self.color_nonreg,
+                             opacity=0.3)
+        fig_length.add_hrect(y0=self.diff_threshold,
+                             y1=df['dPSI'].max() + 1.5,
+                             line_width=0,
+                             fillcolor=self.color_reg, opacity=0.15)
+        fig_length.add_hrect(y0=-self.diff_threshold,
+                             y1=df['dPSI'].min() - 1.5,
+                             line_width=0,
+                             fillcolor="green",
+                             opacity=0.15)
+        fig_length.update_xaxes(showgrid=False, ticks="outside", ticklen=5, tickwidth=2, showline=True,
+                                linecolor='black', tickcolor='black', mirror=True, linewidth=2,
+                                zeroline=False, range=[0, self.max_length])
+        fig_length.update_yaxes(showgrid=False, ticks="outside", ticklen=5, tickwidth=2, showline=True,
+                                linecolor='black', tickcolor='black', mirror=True, linewidth=2,
+                                zeroline=False, nticks=10)
+        return fig_length
