@@ -20,7 +20,7 @@ with expander:
 
 page2_container = st.container()
 
-
+@st.cache
 def update_figures():
     testObject = vis_data.SplicingAnalysis(
         data=st.session_state.vastdiff_output[0],
@@ -31,7 +31,8 @@ def update_figures():
         color_mic=color_mic,
         color_long=color_long,
         color_reg=color_reg,
-        color_nonreg=color_nonreg)
+        color_nonreg=color_nonreg,
+        max_length=max_length)
 
     testObject.diff_threshold = dpsi_value
     udpated_data = testObject.call_diff()
@@ -40,12 +41,14 @@ def update_figures():
     updated_violin_plot = testObject.plot_violin(udpated_data)
     updated_pie_chart = testObject.plot_pie(udpated_data)
     updated_dist_plot = testObject.plot_dist(udpated_data)
+    updated_length_plot = testObject.plot_length(udpated_data)
     updated_orf_plot = testObject.plot_orf(udpated_data)
 
     st.session_state.figures.update({'SCATTER_PLOT': updated_scatter_plot})
     st.session_state.figures.update({'VIOLIN_PLOT': updated_violin_plot})
     st.session_state.figures.update({'PIE_CHART': updated_pie_chart})
     st.session_state.figures.update({'DIST_PLOT': updated_dist_plot})
+    st.session_state.figures.update({'LENGTH_PLOT': updated_length_plot})
     st.session_state.figures.update({'ORF_PLOT': updated_orf_plot})
 
 with st.sidebar:
@@ -66,8 +69,10 @@ with st.sidebar:
         color_nonreg = st.color_picker(
             label='Unregulated events',
             value='#B6B9BF')
+        max_length = st.number_input(
+            label='Max exon length',
+            value=150)
     with right:
-
         color_b = st.color_picker(
             label='Condition B',
             value='#800020')
@@ -93,19 +98,22 @@ else:
             color_mic=color_mic,
             color_long=color_long,
             color_reg=color_reg,
-            color_nonreg=color_nonreg)
+            color_nonreg=color_nonreg,
+            max_length=max_length)
         data_diff = testObject.call_diff()
 
         scatter_plot = testObject.plot_scatter(data_diff)
         violin_plot = testObject.plot_violin(data_diff)
         pie_chart = testObject.plot_pie(data_diff)
         dist_plot = testObject.plot_dist(data_diff)
+        length_plot = testObject.plot_length((data_diff))
         orf_plot = testObject.plot_orf(data_diff)
 
         st.session_state.figures.update({'SCATTER_PLOT': scatter_plot})
         st.session_state.figures.update({'VIOLIN_PLOT': violin_plot})
         st.session_state.figures.update({'PIE_CHART': pie_chart})
         st.session_state.figures.update({'DIST_PLOT': dist_plot})
+        st.session_state.figures.update({'LENGTH_PLOT': length_plot})
         st.session_state.figures.update({'ORF_PLOT': orf_plot})
 
     else:
@@ -127,7 +135,10 @@ else:
                     st.plotly_chart(st.session_state.figures['DIST_PLOT'])
 
             with st.container():
-                st.subheader('Impact on open reading frame')
-                left, _ = st.columns([1, 1])
+
+                left, right = st.columns([1, 1])
                 with left:
+                    st.plotly_chart(st.session_state.figures['LENGTH_PLOT'])
+                with right:
+                    st.subheader('Impact on open reading frame')
                     st.plotly_chart(st.session_state.figures['ORF_PLOT'])
