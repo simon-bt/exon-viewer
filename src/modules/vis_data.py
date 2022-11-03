@@ -29,13 +29,21 @@ class SplicingAnalysis:
                  condition_a: str,
                  condition_b: str,
                  color_a: str,
-                 color_b: str):
+                 color_b: str,
+                 color_mic: str,
+                 color_long: str,
+                 color_nonreg: str,
+                 color_reg: str):
         self.data = data
         self.condition_a = condition_a
         self.condition_b = condition_b
-        self.diff_threshold = 15
+        self.diff_threshold = 10
         self.color_a = color_a
         self.color_b = color_b
+        self.color_mic = color_mic
+        self.color_long = color_long
+        self.color_nonreg = color_nonreg
+        self.color_reg = color_reg
 
     @property
     def diff_threshold(self):
@@ -48,7 +56,7 @@ class SplicingAnalysis:
     def call_diff(self):
         data_diff = self.data.copy()
         data_diff['DIFF'] = data_diff['dPSI']. \
-            apply(lambda x: '1' if abs(x) >= self.diff_threshold else '0')
+            apply(lambda x: 'Yes' if abs(x) >= self.diff_threshold else 'No')
         return data_diff
 
     def plot_scatter(self, df: pandas.DataFrame):
@@ -57,8 +65,9 @@ class SplicingAnalysis:
                                  x=self.condition_a,
                                  y=self.condition_b,
                                  color='DIFF',
-                                 hover_data=['EventID', 'dPSI', 'GENE', 'ORF_IMPACT', 'EXON_TYPE'],
-                                 labels={'DIFF': 'Differentially spliced', '0': 'No', '1': 'Yes'})
+                                 hover_data=df.columns,
+                                 color_discrete_sequence=[self.color_nonreg, self.color_reg],
+                                 labels={'DIFF': 'Regulated'})
         fig_scatter.update_layout(
             template=FIG_TEMPLATE,
             xaxis=dict(title=f'{self.condition_a} PSI [%]'),
@@ -82,9 +91,9 @@ class SplicingAnalysis:
                               line=dict(color="lightgrey", width=2))
         return fig_scatter
 
-    @staticmethod
-    def plot_pie(df: pandas.DataFrame):
-        data_diff_truly = df.query('DIFF == \'1\'')
+
+    def plot_pie(self, df: pandas.DataFrame):
+        data_diff_truly = df.query('DIFF == \'Yes\'')
         counts_diff = dict(data_diff_truly['EXON_TYPE']. \
                            value_counts())
         fig_pie = go.Figure(data=[go.Pie(labels=['MIC', 'LONG'],
@@ -94,7 +103,7 @@ class SplicingAnalysis:
             hoverinfo='label+percent',
             textinfo='value',
             textfont_size=40,
-            marker=dict(colors=['darkorange', 'brown'],
+            marker=dict(colors=[self.color_mic, self.color_long],
                         line=dict(color='#000000', width=4)))
         fig_pie.update_layout(
             template=FIG_TEMPLATE,
@@ -103,8 +112,7 @@ class SplicingAnalysis:
         )
         return fig_pie
 
-    @staticmethod
-    def plot_dist(df: pandas.DataFrame):
+    def plot_dist(self, df: pandas.DataFrame):
         __mic_data = df.query('EXON_TYPE == \'MIC\'')['dPSI']
         __long_data = df.query('EXON_TYPE == \'LONG\'')['dPSI']
         __cumsum_mic = numpy.cumsum(abs(__mic_data))
@@ -116,7 +124,7 @@ class SplicingAnalysis:
                        x=1. * numpy.arange(len(__cumsum_mic)) / (len(__cumsum_mic) - 1),
                        mode='lines',
                        name='MIC',
-                       line=dict(color='darkorange', width=5))
+                       line=dict(color=self.color_mic, width=5))
 
         )
         fig_cumsum.add_trace(
@@ -124,7 +132,7 @@ class SplicingAnalysis:
                        x=1. * numpy.arange(len(__cumsum_long)) / (len(__cumsum_long) - 1),
                        mode='lines',
                        name='LONG',
-                       line=dict(color='brown', width=5))
+                       line=dict(color=self.color_long, width=5))
 
         )
         fig_cumsum.update_layout(
@@ -157,7 +165,7 @@ class SplicingAnalysis:
         __orf_data['ORF_ONTO'] = __orf_data['ORF_IMPACT']. \
             map(__mapping)
         __orf_data = __orf_data[~__orf_data['ORF_ONTO'].isna()]. \
-            query('DIFF == \'1\'')
+            query('DIFF == \'Yes\'')
         __exon_info = dict(__orf_data['EXON_TYPE'].value_counts())
 
         __onto_counts = pandas.DataFrame(__orf_data. \
@@ -190,9 +198,10 @@ class SplicingAnalysis:
                              zeroline=False)
         return fig_orf
 
+
     def plot_violin(self, df: pandas.DataFrame):
         __data_melt = df. \
-            query('DIFF == \'1\''). \
+            query('DIFF == \'Yes\''). \
             melt(id_vars=['EventID', 'EXON_TYPE', 'dPSI', 'GENE', 'ENSEMBL_ID', 'ORF_IMPACT'],
                  value_vars=[self.condition_a, self.condition_b],
                  value_name='PSI',
