@@ -21,6 +21,10 @@ if 'num' not in st.session_state:
     st.session_state.num = 1
 if 'rename_psiA' and 'rename_psiB' not in st.session_state:
     st.session_state.rename_psiA, st.session_state.rename_psiB = '', ''
+if 'figures' not in st.session_state:
+    st.session_state.figures = {}
+
+
 
 left_col, right_col = st.columns(2)
 left_col.title("VAST-viewer")
