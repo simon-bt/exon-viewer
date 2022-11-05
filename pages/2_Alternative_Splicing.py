@@ -21,7 +21,7 @@ with expander:
 
 page2_container = st.container()
 
-@st.cache
+
 def update_figures():
     testObject = vis_data.SplicingAnalysis(
         data=st.session_state.vastdiff_output[0],
