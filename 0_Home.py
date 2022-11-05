@@ -5,11 +5,6 @@ import streamlit as st
 import pandas
 import plotly
 import numpy
-import os
-import sys
-
-project_dir = os.getcwd()
-sys.path.append(f'/{project_dir}')
 
 
 st.set_page_config(layout="wide", page_title="Home", initial_sidebar_state="collapsed")
@@ -27,8 +22,8 @@ if 'figures' not in st.session_state:
 
 
 left_col, right_col = st.columns(2)
-left_col.title("VAST-viewer")
-left_col.header("A tool for visualising vast-tools alternative splicing analysis and sequence querying.")
+left_col.title("Exon-viewer")
+left_col.header("A tool for visualising vast-tools alternative splicing of exons and sequence querying.")
 
 st.markdown(
         """
