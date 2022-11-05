@@ -2,6 +2,8 @@
 
 import streamlit as st
 import pandas
+import sqlite3
+
 
 st.set_page_config(layout='wide', page_title='Data Upload')
 st.header('Upload and Process Data')
@@ -59,11 +61,16 @@ with page1_container:
 
         if dataframe_path:
             data_in = pandas. \
-                read_csv(dataframe_path, sep='\t')
-            # drop('TYPE', axis=1)
-            meta_in = pandas. \
-                read_csv(f'./data/TEST_META.tab.gz', sep='\t')
+                read_csv(dataframe_path, sep='\t').\
+                drop('TYPE', axis=1)
+
+            con = sqlite3.connect("./data/meta.db")
+            cur = con.cursor()
+            meta_in = pandas.read_sql("select * from meta", con).\
+                drop('index', axis=1)
+
             data_final = data_in.merge(meta_in, on='EventID', how='left')
+            con.close()
             with right_col:
                 load = st.button('Load dataframe', on_click=process_data,
                                  args=(data_final, rename_psiA, rename_psiB))
