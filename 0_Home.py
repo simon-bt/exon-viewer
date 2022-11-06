@@ -28,20 +28,10 @@ left_col.header("A tool for visualising vast-tools alternative splicing of exons
 st.markdown(
         """
         ## Summary
-        Impact on open reading frame is available from [VastDB, v3](ttps://vastdb.crg.eu/wiki/Downloads) and generated 
-        as described in [Irimia et al, 2014]().
+        Data available from [VastDB, v3](ttps://vastdb.crg.eu/wiki/Downloads).
 
         """
 )
-
-_, center, _ = st.columns((2, 1, 2))
-with center:
-    reset_button = st.button(label='Restart')
-    if reset_button:
-        var = [
-            st.session_state[key] for key in st.session_state.keys()
-        ]
-
 
 st.markdown(
     """
