@@ -35,7 +35,7 @@ def process_data(df: pandas.DataFrame, col_a: str, col_b: str):
         rename(columns={'PSI_A': col_a, 'PSI_B': col_b}). \
         reset_index()
     # define microexons and long exons
-    data['EXON_TYPE'] = data['LENGTH'].apply(lambda x: 'MIC' if x <= 27 else 'LONG')
+    data['ExonType'] = data['Length'].apply(lambda x: 'MIC' if x <= 27 else 'LONG')
     # append to session state
     st.success('Uploaded dataframe!')
     st.balloons()

@@ -6,8 +6,8 @@ import plotly.graph_objects as go
 FIG_TEMPLATE = dict(
     layout=go.Layout(
         autosize=False,
-        width=550,
-        height=550,
+        width=400,
+        height=400,
         title_font=dict(family="Helvetica", size=18),
         font=dict(family='Helvetica', size=18, color='#1e2125'),
         paper_bgcolor='white',
@@ -57,7 +57,7 @@ class SplicingAnalysis:
 
     def call_diff(self):
         data_diff = self.data.copy()
-        data_diff['DIFF'] = data_diff['dPSI']. \
+        data_diff['Diff'] = data_diff['dPSI']. \
             apply(lambda x: 'Yes' if abs(x) >= self.diff_threshold else 'No')
         return data_diff
 
@@ -66,12 +66,14 @@ class SplicingAnalysis:
         fig_scatter = px.scatter(df,
                                  x=self.condition_a,
                                  y=self.condition_b,
-                                 color='DIFF',
+                                 color='Diff',
                                  hover_data=df.columns,
                                  color_discrete_sequence=[self.color_nonreg, self.color_reg],
-                                 labels={'DIFF': 'Regulated'})
+                                 labels={'Diff': 'Regulated'})
         fig_scatter.update_layout(
             template=FIG_TEMPLATE,
+            width=500,
+            height=500,
             xaxis=dict(title=f'{self.condition_a} PSI [%]'),
             yaxis=dict(title=f'{self.condition_b} PSI [%]'),
             showlegend=True,
@@ -94,8 +96,8 @@ class SplicingAnalysis:
         return fig_scatter
 
     def plot_pie(self, df: pandas.DataFrame):
-        data_diff_truly = df.query('DIFF == \'Yes\'')
-        counts_diff = dict(data_diff_truly['EXON_TYPE']. \
+        data_diff_truly = df.query('Diff == \'Yes\'')
+        counts_diff = dict(data_diff_truly['ExonType']. \
                            value_counts())
         fig_pie = go.Figure(data=[go.Pie(labels=['MIC', 'LONG'],
                                          values=[counts_diff['MIC'], counts_diff['LONG']],
@@ -114,8 +116,8 @@ class SplicingAnalysis:
         return fig_pie
 
     def plot_dist(self, df: pandas.DataFrame):
-        __mic_data = df.query('EXON_TYPE == \'MIC\'')['dPSI']
-        __long_data = df.query('EXON_TYPE == \'LONG\'')['dPSI']
+        __mic_data = df.query('ExonType == \'MIC\'')['dPSI']
+        __long_data = df.query('ExonType == \'LONG\'')['dPSI']
         __cumsum_mic = numpy.cumsum(abs(__mic_data))
         __cumsum_long = numpy.cumsum(abs(__long_data))
 
@@ -138,6 +140,8 @@ class SplicingAnalysis:
         )
         fig_cumsum.update_layout(
             template=FIG_TEMPLATE,
+            width=450,
+            height=450,
             yaxis=dict(title=r'Change in inclusion [dPSI]'),
             xaxis=dict(title=r'Proportion'),
             legend=dict(x=0.5, y=1.15, orientation="h", xanchor='auto', yanchor='auto'),
@@ -155,32 +159,36 @@ class SplicingAnalysis:
     def plot_orf(df: pandas.DataFrame):
         __orf_data = df.copy()
         __mapping = {
-            'CDS_PROT': 'ORF-preserving',
-            'CDS_uncertain': 'ORF-preserving',
-            'CDS_DISR_uEXC': 'ORF-disrupting',
-            'CDS_DISR_uINC': 'ORF-disrupting',
-            'UTR_5': '5/3 UTR',
-            'UTR_3': '5/3 UTR',
-            'NonCoding': 'Non-coding'
+            'NonCoding': 'NonCoding',
+            '5/3 UTR': '5/3 UTR',
+            'ORF-disruption (exc)': 'ORF-disruption (exc)',
+            'Alternative isoform': 'Alternative isoform',
+            'ORF-disruption (inc)': 'ORF-disruption (inc)',
+            'Alternative isoform (alt. stop)': 'Alternative isoform',
+            'CDS (uncertain)': 'CDS (uncertain)',
+            'Alternative isoform (alt. ATG)': 'Alternative isoform',
+            'NaN': 'NaN'
         }
-        __orf_data['ORF_ONTO'] = __orf_data['ORF_IMPACT']. \
+        # }
+        __orf_data['ImpactOnto'] = __orf_data['Impact']. \
             map(__mapping)
-        __orf_data = __orf_data[~__orf_data['ORF_ONTO'].isna()]. \
-            query('DIFF == \'Yes\'')
-        __exon_info = dict(__orf_data['EXON_TYPE'].value_counts())
+        __orf_data = __orf_data[~__orf_data['Impact'].isna()]. \
+            query('Diff == \'Yes\' & ImpactOnto != \'NaN\'')
+        __exon_info = dict(__orf_data['ExonType'].value_counts())
 
         __onto_counts = pandas.DataFrame(__orf_data. \
-                                         groupby('EXON_TYPE')['ORF_ONTO']. \
+                                         groupby('ExonType')['ImpactOnto']. \
                                          value_counts()). \
-            rename(columns={'ORF_ONTO': 'COUNT'}). \
+            rename(columns={'ImpactOnto': 'Count'}). \
             reset_index()
-        __onto_counts['N_EXONS'] = __onto_counts['EXON_TYPE'].map(__exon_info)
-        __onto_counts['PCT'] = __onto_counts. \
-            apply(lambda x: round(x['COUNT'] * 100 / x['N_EXONS'], 2), axis=1)
+        __onto_counts['N_Exons'] = __onto_counts['ExonType'].map(__exon_info)
+        __onto_counts['Pct'] = __onto_counts. \
+            apply(lambda x: round(x['Count'] * 100 / x['N_Exons'], 2), axis=1)
 
-        fig_orf = px.bar(__onto_counts, x="EXON_TYPE", y="PCT", color="ORF_ONTO",
-                         category_orders={'EXON_TYPE': ['LONG', 'MIC']},
-                         labels={'ORF_ONTO': 'Impact on ORF'})
+        fig_orf = px.bar(__onto_counts, x="ExonType", y="Pct", color="ImpactOnto",
+                         category_orders={'ExonType': ['LONG', 'MIC']},
+                         labels={'ImpactOnto': 'Impact'}
+                         )
 
         fig_orf.update_layout(
             template=FIG_TEMPLATE,
@@ -188,7 +196,7 @@ class SplicingAnalysis:
             yaxis=dict(title='% of Events'),
             width=600,
             height=500,
-            legend=dict(x=1.6, y=1.05, orientation="v", xanchor='auto', yanchor='auto'),
+            legend=dict(x=1.95, y=1.05, orientation="v", xanchor='auto', yanchor='auto'),
             margin=dict(l=100, r=10, b=60, t=10, pad=5))
 
         fig_orf.update_xaxes(showgrid=False, ticks="outside", ticklen=5, tickwidth=2, showline=True,
@@ -201,14 +209,14 @@ class SplicingAnalysis:
 
     def plot_violin(self, df: pandas.DataFrame):
         __data_melt = df. \
-            query('DIFF == \'Yes\''). \
-            melt(id_vars=['EventID', 'EXON_TYPE', 'dPSI', 'GENE', 'ENSEMBL_ID', 'ORF_IMPACT'],
+            query('Diff == \'Yes\''). \
+            melt(id_vars=['EventID', 'ExonType', 'dPSI', 'GeneName', 'GeneID', 'Impact'],
                  value_vars=[self.condition_a, self.condition_b],
                  value_name='PSI',
-                 var_name='CONDITION')
+                 var_name='Condition')
 
-        __df_a = __data_melt.query(f'CONDITION == \'{self.condition_a}\'')
-        __df_b = __data_melt.query(f'CONDITION == \'{self.condition_b}\'')
+        __df_a = __data_melt.query(f'Condition == \'{self.condition_a}\'')
+        __df_b = __data_melt.query(f'Condition == \'{self.condition_b}\'')
 
         show_legend = [True, False, False, False]
         pointpos_a = [-1.2, -0.6,
@@ -219,8 +227,8 @@ class SplicingAnalysis:
         fig_violin = go.Figure()
         for i in range(0, 2):
             fig_violin.add_trace(
-                go.Violin(x=__df_a['EXON_TYPE'][(__df_a['EXON_TYPE'] == pandas.unique(__df_a['EXON_TYPE'])[i])],
-                          y=__df_a['PSI'][(__df_a['EXON_TYPE'] == pandas.unique(__df_a['EXON_TYPE'])[i])],
+                go.Violin(x=__df_a['ExonType'][(__df_a['ExonType'] == pandas.unique(__df_a['ExonType'])[i])],
+                          y=__df_a['PSI'][(__df_a['ExonType'] == pandas.unique(__df_a['ExonType'])[i])],
                           legendgroup=self.condition_a, scalegroup=self.condition_a, name=self.condition_a,
                           side='negative',
                           pointpos=pointpos_a[i],
@@ -228,8 +236,8 @@ class SplicingAnalysis:
                           showlegend=show_legend[i])
             )
             fig_violin.add_trace(
-                go.Violin(x=__df_b['EXON_TYPE'][(__df_b['EXON_TYPE'] == pandas.unique(__df_b['EXON_TYPE'])[i])],
-                          y=__df_b['PSI'][(__df_b['EXON_TYPE'] == pandas.unique(__df_b['EXON_TYPE'])[i])],
+                go.Violin(x=__df_b['ExonType'][(__df_b['ExonType'] == pandas.unique(__df_b['ExonType'])[i])],
+                          y=__df_b['PSI'][(__df_b['ExonType'] == pandas.unique(__df_b['ExonType'])[i])],
                           legendgroup=self.condition_b, scalegroup=self.condition_b, name=self.condition_b,
                           side='positive',
                           pointpos=pointpos_b[i],
@@ -239,13 +247,13 @@ class SplicingAnalysis:
 
         fig_violin.update_layout(
             template=FIG_TEMPLATE,
+            width=450,
+            height=450,
             violingap=0,
             violingroupgap=0.3,
             violinmode='overlay',
             yaxis=dict(title='PSI [%]'),
             xaxis=dict(title='Exon Type'),
-            width=600,
-            height=500,
             legend=dict(x=0.5, y=1.15, orientation="h", xanchor='auto', yanchor='auto'),
             margin=dict(l=100, r=10, b=60, t=10, pad=5))
         fig_violin.update_traces(meanline_visible=True,
@@ -261,19 +269,19 @@ class SplicingAnalysis:
         return fig_violin
 
     def plot_length(self, df: pandas.DataFrame):
-        fig_length = px.scatter(df, x='LENGTH',
+        fig_length = px.scatter(df, x='Length',
                                 y='dPSI',
-                                color='EXON_TYPE',
+                                color='ExonType',
                                 hover_data=df.columns,
-                                labels={'EXON_TYPE': 'Exon Type'},
+                                labels={'ExonType': 'Exon Type'},
                                 color_discrete_sequence=[self.color_long, self.color_mic])
         fig_length.update_layout(
             template=FIG_TEMPLATE,
+            width=500,
+            height=500,
             yaxis=dict(title='Change in inclusion [dPSI]'),
             xaxis=dict(title='Length [nt]'),
-            width=600,
-            height=500,
-            legend=dict(x=0.5, y=1.15, orientation="h", xanchor='auto', yanchor='auto'),
+            legend=dict(x=0.5, y=1.2, orientation="h", xanchor='auto', yanchor='auto'),
             margin=dict(l=100, r=10, b=60, t=10, pad=5))
         fig_length.add_hline(y=self.diff_threshold,
                              line_width=2,
