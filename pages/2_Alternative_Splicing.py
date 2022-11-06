@@ -63,7 +63,7 @@ with st.sidebar:
             label='MIC',
             value='#F5AA42')
         color_nonreg = st.color_picker(
-            label='Unregulated events',
+            label='Unregulated exons',
             value='#B6B9BF')
         max_length = st.number_input(
             label='Max exon length',
@@ -77,7 +77,7 @@ with st.sidebar:
             label='LONG',
             value='#35BCDE')
         color_reg = st.color_picker(
-            label='Regulated events',
+            label='Regulated exons',
             value='#23AD3C')
         dpsi_value = st.number_input(
             label='dPSI threshold',
@@ -129,7 +129,7 @@ else:
                     st.plotly_chart(st.session_state.figures['VIOLIN_PLOT'])
 
             with st.container():
-                st.subheader('Differentially spliced events')
+                st.subheader('Differentially spliced exons')
                 left, right = st.columns([1, 1])
                 with left:
                     st.plotly_chart(st.session_state.figures['PIE_CHART'])
