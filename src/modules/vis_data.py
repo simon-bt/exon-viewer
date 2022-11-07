@@ -219,9 +219,9 @@ class SplicingAnalysis:
         __df_b = __data_melt.query(f'Condition == \'{self.condition_b}\'')
 
         show_legend = [True, False, False, False]
-        pointpos_a = [-1.2, -0.6,
-                      -0.6, -0.3]
-        pointpos_b = [1.1, 0.7,
+        pointpos_a = [-0.5, -0.5,
+                      0, 0]
+        pointpos_b = [0.5, 0.5,
                       1, 1]
 
         fig_violin = go.Figure()
@@ -262,7 +262,7 @@ class SplicingAnalysis:
                                  scalemode='count')
         fig_violin.update_xaxes(showgrid=False, ticks="outside", ticklen=5, tickwidth=2, showline=True,
                                 linecolor='black', tickcolor='black', mirror=True, linewidth=2,
-                                zeroline=False)
+                                zeroline=False, range=[-0.5, 1.5])
         fig_violin.update_yaxes(showgrid=False, ticks="outside", ticklen=5, tickwidth=2, showline=True,
                                 linecolor='black', tickcolor='black', mirror=True, linewidth=2,
                                 zeroline=False, nticks=10, range=[-15, 115])
