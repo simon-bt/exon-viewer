@@ -7,7 +7,7 @@ from src.modules import vis_data
 import io
 
 st.set_page_config(layout='wide', page_title='Alternative Splicing')
-st.header('Visualise')
+st.header('2. Visualise data')
 
 expander = st.expander(label='Read more')
 with expander:

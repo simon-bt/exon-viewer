@@ -4,27 +4,15 @@ import streamlit as st
 import pandas
 import sqlite3
 
-
 st.set_page_config(layout='wide', page_title='Data Upload')
-st.header('Upload and Process Data')
-
-# Page 2 Info
-expander = st.expander(label='Read more')
-with expander:
-    st.markdown(
-        """
-        ## 
-        
-
-        """
-    )
-
+st.header('1. Upload and Process Data')
 
 SPECIES = {
     'Homo_sapiens': 'Hsa',
     'Mus_musculus': 'Mmu',
     'Danio_rerio': 'Dre'
 }
+
 
 # Page 2 Callbacks
 def process_data(df: pandas.DataFrame, col_a: str, col_b: str):
@@ -53,35 +41,35 @@ page1_container = st.container()
 with page1_container:
     if not st.session_state.vastdiff_output:
         dataframe_path = st.file_uploader('Choose vast-tools diff file',
-                                              type=['tab'], )
+                                          type=['tab'], )
         selected_species = st.selectbox('Select species',
-                                            options=['Homo_sapiens',
-                                                     'Mus_musculus',
-                                                     'Danio_rerio'])
+                                        options=['Homo_sapiens',
+                                                 'Mus_musculus',
+                                                 'Danio_rerio'])
         species_code = SPECIES[selected_species]
         rename_psiA = st.text_input(label='Specify Condition A name',
-                                        value='Control',
-                                        placeholder='Control condition')
+                                    value='Control',
+                                    placeholder='Control condition')
         rename_psiB = st.text_input(label='Specify Condition B',
-                                        placeholder='Experimental  condition name')
+                                    placeholder='Experimental  condition name')
 
         st.session_state.rename_psiA = rename_psiA
         st.session_state.rename_psiB = rename_psiB
 
         if dataframe_path:
             data_in = pandas. \
-                read_csv(dataframe_path, sep='\t').\
+                read_csv(dataframe_path, sep='\t'). \
                 drop('TYPE', axis=1)
 
             con = sqlite3.connect("./data/meta.db")
             cur = con.cursor()
-            meta_in = pandas.read_sql(f"SELECT * FROM meta WHERE Species = \'{selected_species}\'", con).\
-                drop(['index','Species'], axis=1)
+            meta_in = pandas.read_sql(f"SELECT * FROM meta WHERE Species = \'{selected_species}\'", con). \
+                drop(['index', 'Species'], axis=1)
 
             data_final = data_in.merge(meta_in, on='EventID', how='left')
             con.close()
             load = st.button('Load dataframe', on_click=process_data,
-                                 args=(data_final, rename_psiA, rename_psiB))
+                             args=(data_final, rename_psiA, rename_psiB))
     else:
         with page1_container:
             st.header('Uploaded dataframe:')
