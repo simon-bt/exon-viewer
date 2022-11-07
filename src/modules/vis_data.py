@@ -303,7 +303,7 @@ class SplicingAnalysis:
         fig_length.add_hrect(y0=-self.diff_threshold,
                              y1=df['dPSI'].min() - 1.5,
                              line_width=0,
-                             fillcolor="green",
+                             fillcolor=self.color_reg,
                              opacity=0.15)
         fig_length.update_xaxes(showgrid=False, ticks="outside", ticklen=5, tickwidth=2, showline=True,
                                 linecolor='black', tickcolor='black', mirror=True, linewidth=2,
