@@ -20,6 +20,12 @@ with expander:
     )
 
 
+SPECIES = {
+    'Homo_sapiens': 'Hsa',
+    'Mus_musculus': 'Mmu',
+    'Danio_rerio': 'Dre'
+}
+
 # Page 2 Callbacks
 def process_data(df: pandas.DataFrame, col_a: str, col_b: str):
     """
@@ -31,7 +37,7 @@ def process_data(df: pandas.DataFrame, col_a: str, col_b: str):
     """
     # rename conditions
     data = df.copy().set_index('EventID'). \
-        filter(regex='HsaEX', axis=0). \
+        filter(regex=f'{species_code}EX', axis=0). \
         rename(columns={'PSI_A': col_a, 'PSI_B': col_b}). \
         reset_index()
     # define microexons and long exons
@@ -45,19 +51,22 @@ def process_data(df: pandas.DataFrame, col_a: str, col_b: str):
 # Page 2 Content
 page1_container = st.container()
 with page1_container:
-    left_col, right_col = st.columns(2)
     if not st.session_state.vastdiff_output:
-        with left_col:
-            dataframe_path = st.file_uploader('Choose vast-tools diff file',
+        dataframe_path = st.file_uploader('Choose vast-tools diff file',
                                               type=['tab'], )
-            rename_psiA = st.text_input(label='Specify Condition A name',
+        selected_species = st.selectbox('Select species',
+                                            options=['Homo_sapiens',
+                                                     'Mus_musculus',
+                                                     'Danio_rerio'])
+        species_code = SPECIES[selected_species]
+        rename_psiA = st.text_input(label='Specify Condition A name',
                                         value='Control',
                                         placeholder='Control condition')
-            rename_psiB = st.text_input(label='Specify Condition B',
+        rename_psiB = st.text_input(label='Specify Condition B',
                                         placeholder='Experimental  condition name')
 
-            st.session_state.rename_psiA = rename_psiA
-            st.session_state.rename_psiB = rename_psiB
+        st.session_state.rename_psiA = rename_psiA
+        st.session_state.rename_psiB = rename_psiB
 
         if dataframe_path:
             data_in = pandas. \
@@ -66,13 +75,12 @@ with page1_container:
 
             con = sqlite3.connect("./data/meta.db")
             cur = con.cursor()
-            meta_in = pandas.read_sql("select * from meta", con).\
-                drop('index', axis=1)
+            meta_in = pandas.read_sql(f"SELECT * FROM meta WHERE Species = \'{selected_species}\'", con).\
+                drop(['index','Species'], axis=1)
 
             data_final = data_in.merge(meta_in, on='EventID', how='left')
             con.close()
-            with right_col:
-                load = st.button('Load dataframe', on_click=process_data,
+            load = st.button('Load dataframe', on_click=process_data,
                                  args=(data_final, rename_psiA, rename_psiB))
     else:
         with page1_container:
