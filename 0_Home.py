@@ -23,20 +23,49 @@ if 'figures' not in st.session_state:
 
 left_col, right_col = st.columns(2)
 left_col.title("Exon-viewer")
-left_col.header("A tool for visualising vast-tools alternative splicing of exons and sequence querying.")
+left_col.header("Visualise vast-tools alternative splicing analysis of exons")
 
 st.markdown(
         """
-        ## Summary
-        Data available from [VastDB, v3](ttps://vastdb.crg.eu/wiki/Downloads).
-
+        ### Exon-viewer
+        
+        **Exon-viewer** supports three species:
+        
+        * Homo sapiens (VastDB v. hg38)
+        * Mus musculus (VastDB v. mm10)
+        * Danio rerio  (VastDB v. danRer10)
+        
+        Data available from [VastDB, v3](https://vastdb.crg.eu/wiki/Downloads).
+        
+        ### How to use
+        
+        1. Generate input table using vast-tools compare. 
+        
+        ```
+        vast-tools compare INCLUSION_LEVELS_FULL-root.tab \ 
+        -a [SAMPLE_A] -b [SAMPLE_b] --min_dPSI [value] [...] \ 
+        --print_all_events
+        ```
+        
+        By default, the command will generate a table ```AllEvents-[parameters].tab``` for all events that pass the
+        coverage filters and thresholds.
+        
+        2. Select exons.
+        
+        Run the following command to select only exons from ```AllEvents-[parameters].tab```:
+        
+        ```
+        awk 'NR==1; {if ($1 ~ /EX/) print}' AllEvents-[parameters].tab > InputData.tab
+        ```
+        
+        3. Navigate to Data Upload page of Exon-viewer and upload table.
         """
 )
 
 st.markdown(
     """
     ---
-    Developed and Maintained by Simon Bajew
+    Developed and maintained by Simon Bajew
 
     Copyright (c) 2022 Simon Bajew
     """
